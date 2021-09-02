@@ -7,11 +7,13 @@ const ws = new WebSocket('wss://3september.ru:8000', {
 let count = 0
 const batch = 70000
 const batchTime = 3000
+let started = false
 
 ws.on('open', function open () {
+    started = true
     turnover()
     setInterval(() => {
-        console.log(count)
+        console.log('Переворачиваний: %s. Статус соед.: %s', count, ws.readyState)
     }, 1000)
 })
 
@@ -23,10 +25,12 @@ ws.on('message', function incoming (message) {
 })
 
 function turnover() {
-    count += turnoverBatch()
-    setTimeout(() => {
-        turnover()
-    }, batchTime)
+    if (started) {
+        count += turnoverBatch()
+        setTimeout(() => {
+            turnover()
+        }, batchTime)
+    }
 }
 
 function turnoverBatch() {
