@@ -1,7 +1,8 @@
 import fetch from 'node-fetch'
 import { names, logins, mails } from './data.js'
 
-let i = 0
+let successCounter = 0
+let failConter = 0
 const url = 'http://cannabisterre.com/ynd42/mail.php'
 const timeout = 200
 
@@ -10,8 +11,13 @@ async function run() {
     const mail = getMail()
     const phone = getPhone()
     const [ status, statusCode, time ] = await send(name, mail, phone)
-    console.log('%s. Ответ: %s. Статус: %s. Время: %s. %s, %s, %s', i, status, statusCode, time, name, mail, phone)
-    i++
+    console.log('%s. Fails %s. Ответ: %s. Статус: %s. Время: %s. %s, %s, %s', successCounter, failConter, status, statusCode, time, name, mail, phone)
+    if (status) {
+        successCounter++
+    }
+    else {
+        failConter++
+    }
     setTimeout(() => {
         run()
     }, statusCode ? timeout : 5000)
