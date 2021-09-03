@@ -11,7 +11,7 @@ async function run() {
     const mail = getMail()
     const phone = getPhone()
     const [ status, statusCode, time ] = await send(name, mail, phone)
-    console.log('%s. Fails %s. Ответ: %s. Статус: %s. Время: %s. %s, %s, %s', successCounter, failConter, status, statusCode, time, name, mail, phone)
+    console.log('%s/%s. Ответ: %s. Статус: %s. Время: %s. %s, %s, %s', successCounter, failConter, status, statusCode, time, name, mail, phone)
     if (status) {
         successCounter++
     }
@@ -44,14 +44,21 @@ async function send(name, mail, phone) {
 }
 
 function getData(name, email, phone) {
+    const counties = [
+        'RU',
+        'UA',
+        'KZ',
+        'BY',
+    ]
+    const country = counties[Math.floor(Math.random()*counties.length)]
     const data = {
         name: name,
         email: email,
         phone: phone,
         c1: 'on',
         c2: 'on',
-        country: 'RU',
-        lang: 'RU',
+        country: country,
+        lang: country,
         pixel: '',
         gclid: '',
         gpixel: '',
