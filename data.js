@@ -398,7 +398,20 @@ export const names = [
     'Черных А.',
     'Чесноков М.',
     'Щеглов Д.',
-    'Щеглова А.'
+    'Щеглова А.',
+    'Andrey',
+    'Dmitry',
+    'Semen S.',
+    'Petr',
+    'Inna',
+    'Anna',
+    'Ekaterina',
+    'Yuriy',
+    'Nester',
+    'Roman',
+    'Victoriya',
+    'Elena',
+    'Petrovna',
 ]
 
 export const logins = [
