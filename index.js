@@ -1,75 +1,85 @@
-import WebSocket from 'ws'
+import fetch from 'node-fetch'
+import { names, logins, mails } from './data.js'
 
-let count = 0
-const batch = 70000
-const batchTime = 3000
-let started = false
+let i = 0
+const url = 'http://cannabisterre.com/ynd42/mail.php'
+const timeout = 200
 
-let ws = null
-let reconnectInterval = 1 * 1000 * 60;
-let openedSocket = false
-
-const connect = () => {
-    ws = new WebSocket('wss://3september.ru:8000', {
-        origin: 'https://3september.ru'
-    })
-
-    ws.on('open', function open () {
-        console.log('Connected')
-        openedSocket = true
-        started = true
-        turnover()
-        setInterval(() => {
-            console.log('Переворачиваний: %s. Статус соед.: %s', count, ws.readyState)
-            if (ws.readyState !== 1) {
-                console.log('Рестарт. Статус соед.: %s', count, ws.readyState)
-                started = false
-                openedSocket = false
-            }
-        }, 1000)
-    })
-
-    ws.on('message', function incoming (message) {
-        // totalCount = message
-        // setTimeout(() => {
-        //     ws.send('receive')
-        // }, 1000)
-    })
-
-    ws.on("error", (err) => {
-        console.log("WEBSOCKET_ERROR: Error", err.message);
-        openedSocket = false;
-    });
-
-    ws.on('close', function() {
-        console.log('Disconnected');
-        openedSocket = false
-        setTimeout(connect, reconnectInterval);
-    });
+async function run() {
+    const name = getName()
+    const mail = getMail()
+    const phone = getPhone()
+    const [ status, statusCode, time ] = await send(name, mail, phone)
+    console.log('%s. Ответ: %s. Статус: %s. Время: %s. %s, %s, %s', i, status, statusCode, time, name, mail, phone)
+    i++
+    setTimeout(() => {
+        run()
+    }, statusCode ? timeout : 5000)
 }
 
-connect()
+async function send(name, mail, phone) {
+    let time = Date.now()
+    const data = getData(name, mail, phone)
+    const body = compileBody(data)
 
-setInterval(() => {
-    if (!openedSocket) {
-        connect();
+    try {
+        const response = await fetch(url, { method: 'POST', body: body })
+        const responseStatus = response.status
+        const text = await response.text()
+        const search = text.includes('/thank-you.php')
+        time = Date.now() - time
+        return [search, responseStatus, time]
     }
-}, 5000);
+    catch (e) {
+        console.log(e)
+        return [false, 0, 0]
+    }
 
-function turnover() {
-    if (started) {
-        count += turnoverBatch()
-        setTimeout(() => {
-            turnover()
-        }, batchTime)
-    }
 }
 
-function turnoverBatch() {
-    let i = 0
-    while (i < batch) {
-        ws.send('update')
-        i++
+function getData(name, email, phone) {
+    const data = {
+        name: name,
+        email: email,
+        phone: phone,
+        c1: 'on',
+        c2: 'on',
+        country: 'RU',
+        lang: 'RU',
+        pixel: '',
+        gclid: '',
+        gpixel: '',
+        ttpixel: '',
+        preland_url: 'cannabisterre.com',
+        sid: 'self_2r',
+        landing_url: 'http://cannabisterre.com/ynd42/'
     }
-    return i
+    return data
 }
+
+function compileBody(data) {
+    const body = new URLSearchParams()
+    for (const key in data) {
+        body.append(key, data[key])
+    }
+    return body
+}
+
+function getName() {
+    return names[Math.floor(Math.random()*names.length)];
+}
+
+function getMail() {
+    const login = logins[Math.floor(Math.random()*logins.length)];
+    const mail = mails[Math.floor(Math.random()*mails.length)];
+    return `${login}@${mail}`
+}
+
+function getPhone() {
+    const r = () => {
+        return Math.floor(Math.random()*9)
+    }
+    return `+7 (9${r()}${r()}) ${r()}${r()}${r()}-${r()}${r()}-${r()}${r()}`
+}
+
+run()
